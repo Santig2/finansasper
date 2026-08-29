@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-bg3: var(--bg3);
+  --color-border: var(--border);
+  --color-border2: var(--border2);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent2: var(--accent2);
+  --color-gold: var(--gold);
+  --color-teal: var(--teal);
+  --color-coral: var(--coral);
+  --color-green: var(--green);
+  --color-sky: var(--sky);
+
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+  --font-display: "Syne", sans-serif;
+}
+
+@layer base {
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8e8f0;
+    --muted: #8888a0;
+    --accent: #6c63ff;
+    --accent2: #a78bfa;
+    --gold: #f0b429;
+    --teal: #2dd4bf;
+    --coral: #fb7185;
+    --green: #4ade80;
+    --sky: #38bdf8;
+  }
+
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+    background-image: linear-gradient(to right, rgba(167, 139, 250, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(167, 139, 250, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-color: var(--bg);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-extrabold;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-bg2 border border-border2 rounded-xl sm:rounded-2xl shadow-sm;
+  }
+  
+  .glass-card {
+    @apply bg-bg2/80 backdrop-blur-md border border-border2 rounded-xl sm:rounded-2xl shadow-sm;
+  }
+
+  .input-base {
+    @apply bg-bg3 border border-border2 rounded-lg px-4 py-2 text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-accent to-teal text-white font-semibold py-2 px-6 rounded-lg shadow-lg hover:shadow-accent/25 hover:opacity-90 transition-all duration-300;
+  }
+
+  .btn-secondary {
+    @apply bg-bg3 text-text font-semibold py-2 px-6 rounded-lg border border-border2 hover:border-accent2 transition-all duration-300;
+  }
+
+  .data-value {
+    @apply font-mono;
+  }
+}
