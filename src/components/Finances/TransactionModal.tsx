@@ -1,186 +1,108 @@
-import React, { useState } from 'react'
-import { X, Plus, Car, Home, ShoppingCart, Fuel, PartyPopper, Briefcase, Building, BookOpen, Wrench, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useStore, CATEGORIES } from '../../store/useStore'
-import type { CategoryId } from '../../store/useStore'
+import { format } from 'date-fns'
 
-interface TransactionModalProps {
+interface Props {
   isOpen: boolean
   onClose: () => void
 }
 
-const iconMap: Record<string, React.ReactNode> = {
-  Car: <Car className="w-5 h-5" />,
-  Home: <Home className="w-5 h-5" />,
-  ShoppingCart: <ShoppingCart className="w-5 h-5" />,
-  Fuel: <Fuel className="w-5 h-5" />,
-  PartyPopper: <PartyPopper className="w-5 h-5" />,
-  Briefcase: <Briefcase className="w-5 h-5" />,
-  Building: <Building className="w-5 h-5" />,
-  BookOpen: <BookOpen className="w-5 h-5" />,
-  Wrench: <Wrench className="w-5 h-5" />,
-  Plus: <Plus className="w-5 h-5" />
-}
-
-export function TransactionModal({ isOpen, onClose }: TransactionModalProps) {
-  const addTransaction = useStore(state => state.addTransaction)
-  const accounts = useStore(state => state.accounts)
+export function TransactionModal({ isOpen, onClose }: Props) {
+  const store = useStore()
   
   const [type, setType] = useState<'expense' | 'income'>('expense')
-  const [categoryId, setCategoryId] = useState<CategoryId>('mercado')
   const [amount, setAmount] = useState('')
-  const [accountId, setAccountId] = useState('acc_1')
+  const [cat, setCat] = useState('')
   const [note, setNote] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 
+  useEffect(() => {
+    if (isOpen) {
+      setType('expense')
+      setAmount('')
+      setCat('')
+      setNote('')
+      setDate(new Date().toISOString().split('T')[0])
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!amount || isNaN(Number(amount))) return
+  const handleSave = () => {
+    const amt = parseFloat(amount)
+    if (isNaN(amt) || amt <= 0) return alert('Monto inválido')
 
-    addTransaction({
+    store.addTransaction({
+      id: 'id_' + Date.now(),
+      date,
       type,
-      categoryId,
-      amount: Number(amount),
-      accountId,
-      note,
-      date: new Date(date).toISOString(),
-      description: note || CATEGORIES[categoryId].name
+      cat: cat || 'otro',
+      label: CATEGORIES.find(c => c.id === cat)?.label || 'Otro',
+      amount: amt,
+      note
     })
-    
-    // Reset and close
-    setAmount('')
-    setNote('')
+
     onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-bg/80 backdrop-blur-sm" 
-        onClick={onClose}
-      />
-      
-      {/* Modal Content */}
-      <div className="relative w-full sm:w-[500px] bg-bg2 sm:border sm:border-border2 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-4 duration-300 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-end md:items-center p-4 pb-12 md:pb-4 animate-in fade-in">
+      <div className="bg-[var(--bg2)] border border-[var(--border2)] rounded-[var(--r-xl)] p-5 w-full max-w-[440px] mx-auto flex flex-col gap-4 animate-in slide-in-from-bottom-10">
         
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-border2 flex justify-between items-center bg-bg/50 sticky top-0 z-10">
-          <h2 className="text-xl font-display font-bold text-text">Nueva Transacción</h2>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-bg3 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5 text-muted" />
-          </button>
+        <div className="flex items-center justify-between">
+          <div className="text-[16px] font-bold">Nueva transacción</div>
+          <button onClick={onClose} className="w-8 h-8 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg3)] text-[var(--muted)] flex items-center justify-center hover:text-[var(--text)] hover:border-[var(--border2)] transition-colors">×</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-5">
-          {/* Type Toggle */}
-          <div className="flex bg-bg3 p-1 rounded-xl">
-            <button
-              type="button"
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${type === 'expense' ? 'bg-bg2 text-text shadow' : 'text-muted hover:text-text'}`}
-              onClick={() => setType('expense')}
-            >
-              Gasto
-            </button>
-            <button
-              type="button"
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${type === 'income' ? 'bg-bg2 text-text shadow' : 'text-muted hover:text-text'}`}
-              onClick={() => setType('income')}
-            >
-              Ingreso
-            </button>
-          </div>
+        <div className="toggle-group">
+          <div className={`toggle-opt expense ${type === 'expense' ? 'active' : ''}`} onClick={() => setType('expense')}>Gasto</div>
+          <div className={`toggle-opt income ${type === 'income' ? 'active' : ''}`} onClick={() => setType('income')}>Ingreso</div>
+        </div>
 
-          {/* Amount */}
-          <div>
-            <label className="block text-xs font-mono text-muted mb-2 uppercase tracking-wider">Monto</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted">$</span>
-              <input 
-                type="number"
-                step="0.01"
-                required
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                className="input-base w-full pl-8 text-lg font-mono"
-                placeholder="0.00"
-              />
-            </div>
-          </div>
+        <div className="input-wrap">
+          <div className="input-label">Monto</div>
+          <input 
+            type="number" 
+            className="input input-mono text-[24px] font-bold text-center h-[54px]" 
+            placeholder="$0.00"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+          />
+        </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-xs font-mono text-muted mb-2 uppercase tracking-wider">Categoría</label>
-            <div className="grid grid-cols-5 gap-2">
-              {Object.values(CATEGORIES).map(cat => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  title={cat.name}
-                  onClick={() => setCategoryId(cat.id)}
-                  className={`p-3 rounded-xl flex items-center justify-center transition-all ${
-                    categoryId === cat.id 
-                      ? 'bg-accent/20 border-accent/50 text-accent' 
-                      : 'bg-bg3 border-transparent text-muted hover:text-text hover:bg-border2'
-                  } border`}
-                >
-                  {iconMap[cat.icon]}
-                </button>
-              ))}
-            </div>
-            <div className="text-center mt-2 text-sm font-medium text-text">
-              {CATEGORIES[categoryId].name}
-            </div>
+        <div>
+          <div className="input-label mb-2">Categoría</div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {CATEGORIES.filter(c => type === 'expense' ? true : ['trabajo', 'adstrategic', 'otro'].includes(c.id)).map(c => (
+              <div 
+                key={c.id} 
+                className={`flex flex-col items-center gap-1 p-2.5 rounded-[var(--r-md)] border bg-[var(--bg3)] cursor-pointer text-[10px] transition-all hover:border-[var(--border2)] hover:text-[var(--text)] ${
+                  cat === c.id ? '!border-[var(--green-b)] !bg-[var(--green-bg)] !text-[var(--green)]' : 'border-[var(--border)] text-[var(--muted)]'
+                }`}
+                onClick={() => setCat(c.id)}
+              >
+                <span className="text-[20px]">{c.icon}</span>
+                <span className="truncate w-full text-center">{c.label}</span>
+              </div>
+            ))}
           </div>
+        </div>
 
-          {/* Account */}
-          <div>
-            <label className="block text-xs font-mono text-muted mb-2 uppercase tracking-wider">Cuenta</label>
-            <select
-              value={accountId}
-              onChange={e => setAccountId(e.target.value)}
-              className="input-base w-full appearance-none cursor-pointer"
-            >
-              {accounts.map(acc => (
-                <option key={acc.id} value={acc.id}>{acc.name} - ${acc.balance.toLocaleString()}</option>
-              ))}
-            </select>
-          </div>
+        <div className="input-wrap">
+          <div className="input-label">Nota (opcional)</div>
+          <input type="text" className="input" placeholder="Describe el gasto..." value={note} onChange={e => setNote(e.target.value)} />
+        </div>
 
-          {/* Date & Note */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-mono text-muted mb-2 uppercase tracking-wider">Fecha</label>
-              <input
-                type="date"
-                required
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                className="input-base w-full text-sm font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-muted mb-2 uppercase tracking-wider">Nota (Op)</label>
-              <input
-                type="text"
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                placeholder="Opcional"
-                className="input-base w-full text-sm"
-              />
-            </div>
-          </div>
+        <div className="input-wrap">
+          <div className="input-label">Fecha</div>
+          <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} />
+        </div>
 
-          {/* Submit */}
-          <button type="submit" className="btn-primary w-full mt-4 flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-5 h-5" />
-            Registrar {type === 'expense' ? 'Gasto' : 'Ingreso'}
-          </button>
-        </form>
+        <div className="flex gap-2.5 mt-2">
+          <button className="btn btn-secondary flex-1" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary flex-[2]" onClick={handleSave}>Guardar</button>
+        </div>
+
       </div>
     </div>
   )

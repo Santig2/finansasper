@@ -1,304 +1,267 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type CategoryId = 'seguro_carro' | 'servicios' | 'mercado' | 'gasolina' | 'ocio' | 'trabajo' | 'adstrategic' | 'educacion' | 'reparaciones' | 'otro' | 'tarjeta_credito' | 'buffer'
-export type GoalCategory = 'Trabajo' | 'Adstrategic' | 'Académico' | 'Personal'
-export type GoalStatus = 'Por hacer' | 'En progreso' | 'Completado' | 'Vencido'
-export type ClientStage = 'Contactado' | 'Demo dada' | 'Negociando' | 'Cliente'
+export type AccountId = 'operativa' | 'carro' | 'invest'
+export type TransactionType = 'income' | 'expense'
 
 export interface Category {
-  id: CategoryId
-  name: string
+  id: string
   icon: string
+  label: string
   color: string
 }
 
+export const CATEGORIES: Category[] = [
+  { id: 'mercado', icon: '🛒', label: 'Mercado', color: 'var(--green)' },
+  { id: 'gasolina', icon: '⛽', label: 'Gasolina', color: 'var(--gold)' },
+  { id: 'seguro', icon: '🚗', label: 'Seguro', color: 'var(--blue)' },
+  { id: 'servicios', icon: '🏠', label: 'Servicios', color: 'var(--cyan)' },
+  { id: 'salidas', icon: '🎉', label: 'Salidas', color: 'var(--purple)' },
+  { id: 'trabajo', icon: '💼', label: 'Trabajo', color: 'var(--green)' },
+  { id: 'adstrategic', icon: '🏢', label: 'Adstrat.', color: 'var(--blue)' },
+  { id: 'educacion', icon: '📚', label: 'Educación', color: 'var(--teal)' },
+  { id: 'tarjeta', icon: '💳', label: 'Tarjeta', color: 'var(--red)' },
+  { id: 'otro', icon: '📝', label: 'Otro', color: 'var(--muted)' },
+]
+
 export interface Account {
-  id: string
   name: string
-  type: string
   balance: number
-  status: 'activa' | 'bloqueada' | 'reservada'
   blocked: boolean
-  color: string
-  note?: string
 }
 
 export interface Transaction {
   id: string
   date: string
-  amount: number
-  description: string
-  type: 'income' | 'expense'
-  categoryId: CategoryId
-  accountId: string
+  type: TransactionType
+  cat: string
+  label: string
+  amount: number | null
   note?: string
+  hidden?: boolean
 }
 
 export interface Budget {
-  categoryId: CategoryId
+  label: string
   amount: number
-}
-
-export interface Subtask {
-  id: string
-  title: string
-  completed: boolean
 }
 
 export interface Goal {
   id: string
   title: string
-  target: string
-  category: GoalCategory
+  cat: string
+  deadline: string
   progress: number
-  status: GoalStatus
-  deadline?: string
-  notes?: string
-  subtasks: Subtask[]
+  done: boolean
 }
 
-export interface Client {
-  id: string
-  name: string
-  product: string
-  lastContact: string
-  potentialAmount: number
-  stage: ClientStage
-  notes?: string
+export interface Config {
+  minBalance: number
+  warnBalance: number
+  rentStart: string
+  rentAmt: number
 }
 
-export interface UserProfile {
-  name: string
-  minThreshold: number
-  estimatedIncome: number
-  showCarAccountInTotal: boolean
-}
-
-export interface RecurringExpense {
-  id: string
-  title: string
-  amount: number
-}
-
-export interface StoreState {
-  hasCompletedOnboarding: boolean
-  profile: UserProfile
-  availableToday: number
-  monthlySpend: number
-  monthlyBudget: number
-  runwayDays: number
-  monthlyIncome: number
-  goals: Goal[]
+export interface AppState {
+  accounts: Record<AccountId, Account>
   transactions: Transaction[]
-  accounts: Account[]
-  budgets: Budget[]
-  clients: Client[]
-  recurringExpenses: RecurringExpense[]
-  // Actions
-  completeOnboarding: (useDefaults?: boolean) => void
-  updateProfile: (profile: Partial<UserProfile>) => void
-  addTransaction: (tx: Omit<Transaction, 'id'>) => void
-  updateGoalProgress: (id: string, progress: number) => void
-  updateGoalSubtask: (goalId: string, subtaskId: string, completed: boolean) => void
-  moveClientStage: (clientId: string, newStage: ClientStage) => void
-  addRecurringExpense: (expense: Omit<RecurringExpense, 'id'>) => void
-  removeRecurringExpense: (id: string) => void
-  updateRecurringExpense: (id: string, title: string, amount: number) => void
-  importData: (data: any) => void
-  resetData: () => void
+  budget: Record<string, Budget>
+  goals: Goal[]
+  config: Config
 }
 
-export const CATEGORIES: Record<CategoryId, Category> = {
-  seguro_carro: { id: 'seguro_carro', name: 'Seguro carro', icon: 'Car', color: 'text-sky' },
-  servicios: { id: 'servicios', name: 'Servicios/utilities', icon: 'Home', color: 'text-accent' },
-  mercado: { id: 'mercado', name: 'Mercado', icon: 'ShoppingCart', color: 'text-teal' },
-  gasolina: { id: 'gasolina', name: 'Gasolina', icon: 'Fuel', color: 'text-orange-500' },
-  ocio: { id: 'ocio', name: 'Salidas/ocio', icon: 'PartyPopper', color: 'text-accent2' },
-  trabajo: { id: 'trabajo', name: 'Trabajo/ingreso banco', icon: 'Briefcase', color: 'text-green' },
-  adstrategic: { id: 'adstrategic', name: 'Adstrategic', icon: 'Building', color: 'text-gold' },
-  educacion: { id: 'educacion', name: 'Educación/tuition', icon: 'BookOpen', color: 'text-sky' },
-  reparaciones: { id: 'reparaciones', name: 'Reparaciones', icon: 'Wrench', color: 'text-coral' },
-  tarjeta_credito: { id: 'tarjeta_credito', name: 'Pago tarjeta de crédito', icon: 'CreditCard', color: 'text-coral' },
-  buffer: { id: 'buffer', name: 'Buffer / imprevistos', icon: 'ShieldAlert', color: 'text-gold' },
-  otro: { id: 'otro', name: 'Otro', icon: 'Plus', color: 'text-muted' },
-}
-
-const defaultState = {
-  hasCompletedOnboarding: false,
-  profile: {
-    name: 'Santi',
-    minThreshold: 5000,
-    estimatedIncome: 6500,
-    showCarAccountInTotal: false,
+const DEFAULT_STATE: AppState = {
+  accounts: {
+    operativa: { name: 'Cuenta de Ahorros', balance: 3828, blocked: false },
+    carro: { name: 'Cuenta Carro', balance: 6640, blocked: true },
+    invest: { name: 'Inversiones', balance: 1814, blocked: false }
   },
-  accounts: [
-    { id: 'operativa', name: 'Cuenta Operativa', type: 'Checking', balance: 0, status: 'activa' as const, blocked: false, color: 'green' },
-    { id: 'carro', name: 'Cuenta Carro', type: 'Savings', balance: 0, status: 'bloqueada' as const, blocked: true, color: 'gold' },
-  ],
-  budgets: [],
-  recurringExpenses: [],
-  availableToday: 0,
-  monthlySpend: 0,
-  monthlyBudget: 0,
-  runwayDays: 0,
-  monthlyIncome: 0,
-  goals: [],
-  clients: [],
-  transactions: []
-}
-
-const santiDefaults = {
-  profile: {
-    name: 'Santi',
-    minThreshold: 5000,
-    estimatedIncome: 6500,
-    showCarAccountInTotal: false,
-  },
-  accounts: [
-    { id: 'operativa', name: 'Cuenta de Ahorros', type: 'Checking', balance: 7073, status: 'activa' as const, blocked: false, color: 'green', note: 'Disponible para gastos y operación. Ya descontó pago de tarjeta de crédito.' },
-    { id: 'carro', name: 'Cuenta Carro', type: 'Savings', balance: 6764, status: 'bloqueada' as const, blocked: true, color: 'gold', note: 'Bloqueada. Exclusiva para compra del carro. No aparece en el total disponible del dashboard.' },
-  ],
-  budgets: [
-    { categoryId: 'seguro_carro' as CategoryId, amount: 250 },
-    { categoryId: 'servicios' as CategoryId, amount: 200 },
-    { categoryId: 'mercado' as CategoryId, amount: 200 },
-    { categoryId: 'gasolina' as CategoryId, amount: 100 },
-    { categoryId: 'ocio' as CategoryId, amount: 100 },
-    { categoryId: 'buffer' as CategoryId, amount: 100 },
-  ],
-  recurringExpenses: [
-    { id: 're_1', title: 'Seguro carro', amount: 250 },
-    { id: 're_2', title: 'Servicios/utilities', amount: 200 },
-    { id: 're_3', title: 'Mercado', amount: 200 },
-    { id: 're_4', title: 'Gasolina', amount: 100 },
-    { id: 're_5', title: 'Salidas/ocio', amount: 100 },
-    { id: 're_6', title: 'Buffer / imprevistos', amount: 100 },
-  ],
-  availableToday: 7073,
-  monthlySpend: 25, // Only Mercado counts for this month's daily operating spend initially
-  monthlyBudget: 850,
-  runwayDays: 249, // 7073 / (850 / 30)
-  monthlyIncome: 6500,
-  goals: [
-    { id: '1', title: 'Conseguir trabajo part-time', target: 'banco/finanzas', category: 'Trabajo' as GoalCategory, progress: 0, status: 'Por hacer' as GoalStatus, deadline: '2026-10-01', subtasks: [{ id: 's1', title: 'Actualizar CV', completed: false }, { id: 's2', title: 'Aplicar a 5 bancos', completed: false }] },
-    { id: '2', title: '1 cliente AddNexo pago', target: 'MRR', category: 'Adstrategic' as GoalCategory, progress: 0, status: 'Por hacer' as GoalStatus, deadline: '2026-12-01', subtasks: [{ id: 's1', title: 'Prospectar 10 leads', completed: false }] },
-    { id: '3', title: '3 clientes web Adstrategic', target: '$97/mes', category: 'Adstrategic' as GoalCategory, progress: 0, status: 'Por hacer' as GoalStatus, deadline: '2026-12-01', subtasks: [{ id: 's1', title: 'Cerrar cliente 1', completed: false }, { id: 's2', title: 'Cerrar cliente 2', completed: false }] },
-    { id: '4', title: '5 operadores valet ADDSPOT', target: 'contactados', category: 'Adstrategic' as GoalCategory, progress: 0, status: 'Por hacer' as GoalStatus, deadline: '2026-10-31', subtasks: [{ id: 's1', title: 'Llamar a 2 operadores', completed: false }] },
-    { id: '5', title: 'Prototipo ADDSPOT funcional', target: 'MVP', category: 'Adstrategic' as GoalCategory, progress: 0, status: 'Por hacer' as GoalStatus, deadline: '2026-12-01', subtasks: [{ id: 's1', title: 'Diseño UI', completed: false }] },
-    { id: '6', title: 'Pasar MAC 1105 (A o B)', target: 'MDC', category: 'Académico' as GoalCategory, progress: 0, status: 'Por hacer' as GoalStatus, deadline: '2026-12-15', subtasks: [{ id: 's1', title: 'Midterm', completed: false }] },
-    { id: '7', title: 'Pasar COP 1334 (A o B)', target: 'MDC', category: 'Académico' as GoalCategory, progress: 0, status: 'Por hacer' as GoalStatus, deadline: '2026-12-15', subtasks: [{ id: 's1', title: 'Midterm', completed: false }] },
-  ],
-  clients: [
-    { id: 'c1', name: 'Miami Valet Co', product: 'ADDSPOT', lastContact: '2026-08-25', potentialAmount: 500, stage: 'Contactado' as ClientStage },
-    { id: 'c2', name: 'AutoRepair LLC', product: 'AddNexo', lastContact: '2026-08-28', potentialAmount: 299, stage: 'Demo dada' as ClientStage },
-    { id: 'c3', name: 'Dental Care Miami', product: 'Web', lastContact: '2026-08-29', potentialAmount: 97, stage: 'Negociando' as ClientStage },
-  ],
   transactions: [
-    { id: 'txn_001', date: '2026-08-21T12:00:00.000Z', amount: 0, description: '💳 Pago tarjeta de crédito', type: 'expense' as const, categoryId: 'tarjeta_credito' as CategoryId, accountId: 'operativa', note: 'Pago agosto 2026' },
-    { id: 'txn_002', date: '2026-08-22T14:30:00.000Z', amount: 25, description: '🛒 Mercado', type: 'expense' as const, categoryId: 'mercado' as CategoryId, accountId: 'operativa', note: 'Huevos y leche' },
-    { id: 'txn_003', date: '2026-08-24T09:15:00.000Z', amount: 4400, description: '📚 Tuition MDC — Fall 2026', type: 'expense' as const, categoryId: 'educacion' as CategoryId, accountId: 'operativa', note: '5 clases: MAC 1105, COP 1334, ENC 1101, AMH 2020 (drop), SLS 1106' },
+    { id: 't1', date: '2026-08-22', type: 'expense', cat: 'mercado', label: 'Mercado', amount: 25, note: 'Huevos y leche' },
+    { id: 't2', date: '2026-08-24', type: 'expense', cat: 'educacion', label: 'Tuition MDC Fall 2026', amount: 4400, note: '4 clases' },
+    { id: 't3', date: '2026-08-21', type: 'expense', cat: 'tarjeta', label: 'Pago tarjeta crédito', amount: null, note: 'Agosto 2026', hidden: true }
   ],
+  budget: {
+    seguro: { label: '🚗 Seguro carro', amount: 250 },
+    servicios: { label: '🏠 Servicios', amount: 200 },
+    mercado: { label: '🛒 Mercado', amount: 200 },
+    gasolina: { label: '⛽ Gasolina', amount: 100 },
+    salidas: { label: '🎉 Salidas', amount: 100 },
+    buffer: { label: '🛡 Buffer', amount: 100 }
+  },
+  goals: [
+    { id: 'g1', title: 'Trabajo part-time banco/finanzas', cat: 'trabajo', deadline: '2026-10-01', progress: 0, done: false },
+    { id: 'g2', title: '1 cliente AddNexo pago', cat: 'adstrategic', deadline: '2026-12-01', progress: 0, done: false },
+    { id: 'g3', title: '3 clientes web Adstrategic $97', cat: 'adstrategic', deadline: '2026-12-01', progress: 0, done: false },
+    { id: 'g4', title: '5 operadores valet (ADDSPOT)', cat: 'adstrategic', deadline: '2026-10-31', progress: 0, done: false },
+    { id: 'g5', title: 'Prototipo ADDSPOT funcional', cat: 'adstrategic', deadline: '2026-12-01', progress: 0, done: false },
+    { id: 'g6', title: 'MAC 1105 — A o B', cat: 'academico', deadline: '2026-12-15', progress: 0, done: false },
+    { id: 'g7', title: 'COP 1334 — A o B', cat: 'academico', deadline: '2026-12-15', progress: 0, done: false },
+  ],
+  config: { minBalance: 5000, warnBalance: 6000, rentStart: '2026-12-01', rentAmt: 0 }
 }
 
-export const useStore = create<StoreState>()(
+export interface StoreActions {
+  addTransaction: (txn: Transaction) => void
+  updateTransaction: (id: string, txn: Partial<Transaction>) => void
+  deleteTransaction: (id: string) => void
+  updateAccountBalance: (id: AccountId, balance: number) => void
+  updateBudget: (key: string, amount: number) => void
+  addGoal: (goal: Goal) => void
+  updateGoalProgress: (id: string, progress: number) => void
+  toggleGoalDone: (id: string) => void
+  deleteGoal: (id: string) => void
+  updateConfig: (config: Partial<Config>) => void
+  resetData: () => void
+  importData: (data: AppState) => void
+}
+
+type Store = AppState & StoreActions
+
+export const useStore = create<Store>()(
   persist(
     (set, get) => ({
-      ...defaultState,
-
-      completeOnboarding: (useDefaults?: boolean) => {
-        if (useDefaults) {
-          set({ ...santiDefaults, hasCompletedOnboarding: true })
-        } else {
-          set({ hasCompletedOnboarding: true })
-        }
-      },
-
-      updateProfile: (profile) => set((state) => ({ profile: { ...state.profile, ...profile } })),
-
-      addTransaction: (tx) => set((state) => {
-        const newTx = { ...tx, id: Math.random().toString(36).substr(2, 9) }
-        const updatedAccounts = state.accounts.map(acc => {
-          if (acc.id === tx.accountId) {
-            return { ...acc, balance: tx.type === 'income' ? acc.balance + tx.amount : acc.balance - tx.amount }
+      ...DEFAULT_STATE,
+      
+      addTransaction: (txn) => set(state => {
+        const newTransactions = [txn, ...state.transactions]
+        const accounts = { ...state.accounts }
+        
+        // Auto-update operativa balance
+        if (txn.amount && !txn.hidden) {
+          if (txn.type === 'expense') {
+            accounts.operativa.balance -= txn.amount
+          } else {
+            accounts.operativa.balance += txn.amount
           }
-          return acc
-        })
-        const newAvailableToday = updatedAccounts.filter(a => !a.blocked).reduce((acc, a) => acc + a.balance, 0)
-
-        const excludedFromMonthly = ['educacion', 'tarjeta_credito']
-        const newMonthlySpend = (tx.type === 'expense' && !excludedFromMonthly.includes(tx.categoryId)) 
-            ? state.monthlySpend + tx.amount 
-            : state.monthlySpend
-
+        }
+        
+        return { transactions: newTransactions, accounts }
+      }),
+      
+      updateTransaction: (id, updatedTxn) => set(state => {
+        const oldTxn = state.transactions.find(t => t.id === id)
+        if (!oldTxn) return state
+        
+        const accounts = { ...state.accounts }
+        
+        // Revert old amount
+        if (oldTxn.amount && !oldTxn.hidden) {
+          if (oldTxn.type === 'expense') accounts.operativa.balance += oldTxn.amount
+          else accounts.operativa.balance -= oldTxn.amount
+        }
+        
+        // Apply new amount
+        const newTxn = { ...oldTxn, ...updatedTxn }
+        if (newTxn.amount && !newTxn.hidden) {
+          if (newTxn.type === 'expense') accounts.operativa.balance -= newTxn.amount
+          else accounts.operativa.balance += newTxn.amount
+        }
+        
         return {
-          transactions: [newTx, ...state.transactions].slice(0, 100),
-          accounts: updatedAccounts,
-          monthlySpend: newMonthlySpend,
-          monthlyIncome: tx.type === 'income' ? state.monthlyIncome + tx.amount : state.monthlyIncome,
-          availableToday: newAvailableToday,
+          transactions: state.transactions.map(t => t.id === id ? newTxn : t),
+          accounts
         }
       }),
       
-      updateGoalProgress: (id, progress) => set((state) => ({
-        goals: state.goals.map(g => {
-          if (g.id === id) {
-            let status = g.status
-            if (progress === 100) status = 'Completado'
-            else if (progress > 0) status = 'En progreso'
-            else status = 'Por hacer'
-            return { ...g, progress, status }
-          }
-          return g
-        })
-      })),
-
-      updateGoalSubtask: (goalId, subtaskId, completed) => set((state) => ({
-        goals: state.goals.map(g => g.id === goalId ? {
-          ...g,
-          subtasks: g.subtasks.map(s => s.id === subtaskId ? { ...s, completed } : s)
-        } : g)
-      })),
-
-      moveClientStage: (clientId, newStage) => {
-        const state = get()
-        const client = state.clients.find(c => c.id === clientId)
-        if (!client) return
-
-        if (newStage === 'Cliente' && client.stage !== 'Cliente') {
-          state.addTransaction({
-            date: new Date().toISOString(),
-            amount: client.potentialAmount,
-            description: `Nuevo cliente: ${client.name} (${client.product})`,
-            type: 'income',
-            categoryId: 'adstrategic',
-            accountId: 'acc_1'
-          })
+      deleteTransaction: (id) => set(state => {
+        const txn = state.transactions.find(t => t.id === id)
+        if (!txn) return state
+        
+        const accounts = { ...state.accounts }
+        if (txn.amount && !txn.hidden) {
+          if (txn.type === 'expense') accounts.operativa.balance += txn.amount
+          else accounts.operativa.balance -= txn.amount
         }
-
-        set((state) => ({
-          clients: state.clients.map(c => c.id === clientId ? { ...c, stage: newStage, lastContact: new Date().toISOString().split('T')[0] } : c)
-        }))
-      },
-
-      addRecurringExpense: (expense) => set((state) => ({
-        recurringExpenses: [...state.recurringExpenses, { ...expense, id: Math.random().toString(36).substr(2, 9) }]
-      })),
-
-      removeRecurringExpense: (id) => set((state) => ({
-        recurringExpenses: state.recurringExpenses.filter(e => e.id !== id)
+        
+        return {
+          transactions: state.transactions.filter(t => t.id !== id),
+          accounts
+        }
+      }),
+      
+      updateAccountBalance: (id, balance) => set(state => ({
+        accounts: {
+          ...state.accounts,
+          [id]: { ...state.accounts[id], balance }
+        }
       })),
       
-      updateRecurringExpense: (id, title, amount) => set((state) => ({
-        recurringExpenses: state.recurringExpenses.map(e => e.id === id ? { ...e, title, amount } : e)
+      updateBudget: (key, amount) => set(state => ({
+        budget: {
+          ...state.budget,
+          [key]: { ...state.budget[key], amount }
+        }
       })),
-
-      importData: (data) => set({ ...data }),
       
-      resetData: () => set({ ...defaultState })
+      addGoal: (goal) => set(state => ({
+        goals: [...state.goals, goal]
+      })),
+      
+      updateGoalProgress: (id, progress) => set(state => {
+        const goals = state.goals.map(g => {
+          if (g.id !== id) return g
+          const done = progress >= 100
+          return { ...g, progress, done: done ? true : g.done }
+        })
+        return { goals }
+      }),
+      
+      toggleGoalDone: (id) => set(state => {
+        const goals = state.goals.map(g => {
+          if (g.id !== id) return g
+          const done = !g.done
+          return { ...g, done, progress: done ? 100 : g.progress }
+        })
+        return { goals }
+      }),
+      
+      deleteGoal: (id) => set(state => ({
+        goals: state.goals.filter(g => g.id !== id)
+      })),
+      
+      updateConfig: (config) => set(state => ({
+        config: { ...state.config, ...config }
+      })),
+      
+      resetData: () => set(DEFAULT_STATE),
+      
+      importData: (data) => set(data)
     }),
     {
-      name: 'santi-os-storage-v3',
+      name: 'santios_v3',
     }
   )
 )
+
+// Helper selectors
+export const getMonthlySpent = (state: Store) => {
+  const now = new Date()
+  const mo = now.getMonth()
+  const yr = now.getFullYear()
+  const spent: Record<string, number> = {}
+  
+  Object.keys(state.budget).forEach(k => spent[k] = 0)
+  
+  ;(state.transactions || []).forEach(t => {
+    if (!t.amount || t.hidden) return
+    const d = new Date(t.date + 'T12:00:00Z') // prevent timezone shift
+    if (d.getMonth() === mo && d.getFullYear() === yr && t.type === 'expense') {
+      const map: Record<string, string> = { mercado: 'mercado', gasolina: 'gasolina', seguro: 'seguro', servicios: 'servicios', salidas: 'salidas' }
+      const key = map[t.cat] || 'buffer'
+      if (spent[key] !== undefined) spent[key] += t.amount
+      else spent['buffer'] = (spent['buffer'] || 0) + t.amount
+    }
+  })
+  
+  return spent
+}
+
+export const getTotalBudget = (state: Store) => {
+  return Object.values(state.budget).reduce((a, b) => a + b.amount, 0)
+}
+
+export const getTotalSpentMonth = (state: Store) => {
+  const spent = getMonthlySpent(state)
+  return Object.values(spent).reduce((a, b) => a + b, 0)
+}
