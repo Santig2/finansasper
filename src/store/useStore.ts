@@ -120,7 +120,7 @@ type Store = AppState & StoreActions
 
 export const useStore = create<Store>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...DEFAULT_STATE,
       
       addTransaction: (txn) => set(state => {

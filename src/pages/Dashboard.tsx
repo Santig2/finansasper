@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useStore, getMonthlySpent, getTotalBudget, getTotalSpentMonth, CATEGORIES } from '../store/useStore'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'

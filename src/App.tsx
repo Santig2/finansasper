@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { 
   Home, DollarSign, Calculator, Target, Settings, 
-  Plus, X 
+  Plus 
 } from 'lucide-react'
 import { Dashboard } from './pages/Dashboard'
 import { Finanzas } from './pages/Finanzas'

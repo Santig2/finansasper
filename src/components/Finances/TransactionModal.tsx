@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useStore, CATEGORIES } from '../../store/useStore'
-import { format } from 'date-fns'
 
 interface Props {
   isOpen: boolean

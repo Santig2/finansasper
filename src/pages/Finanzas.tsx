@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useStore, getMonthlySpent, CATEGORIES } from '../store/useStore'
-import { format } from 'date-fns'
 
 export function Finanzas() {
   const store = useStore()

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useRef } from 'react'
 import { useStore } from '../store/useStore'
 
 export function Config() {
