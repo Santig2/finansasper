@@ -229,7 +229,7 @@ export const useStore = create<Store>()(
       importData: (data) => set(data)
     }),
     {
-      name: 'santios_v3',
+      name: 'santios_v4',
     }
   )
 )
